@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Terraforming Mars Milestone Watch",
+  "version": "1.4.0",
+  "description": "Compare player milestone progress and award points in Terraforming Mars on Board Game Arena.",
+  "permissions": ["storage", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://boardgamearena.com/*",
+        "*://*.boardgamearena.com/*"
+      ],
+      "js": ["settings-bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "*://boardgamearena.com/*",
+        "*://*.boardgamearena.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ],
+  "action": {
+    "default_title": "Terraforming Mars Milestone Watch",
+    "default_popup": "popup.html"
+  }
+}

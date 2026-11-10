@@ -1,0 +1,58 @@
+#tm-milestone-watch {
+  position: fixed;
+  z-index: 100000;
+  top: 72px;
+  right: 14px;
+  width: min(390px, calc(100vw - 28px));
+  max-height: calc(100vh - 90px);
+  overflow: auto;
+  resize: both;
+  min-width: 240px;
+  min-height: 120px;
+  color: #f6f7f9;
+  background: rgba(24, 27, 33, .96);
+  border: 2px solid #667085;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+  font: 12px/1.25 system-ui, sans-serif;
+}
+
+#tm-milestone-watch[data-level="near"] { border-color: #f59e0b; }
+#tm-milestone-watch[data-level="claimable"] { border-color: #ef4444; }
+.tm-watch-header { display: flex; align-items: center; justify-content: space-between; cursor: move; touch-action: none; user-select: none; }
+.tm-watch-title { padding: 8px 10px; font-size: 14px; font-weight: 800; }
+.tm-watch-window-actions { display: flex; gap: 3px; padding-right: 6px; }
+.tm-watch-window-actions button { width: 25px; height: 25px; padding: 0; border: 0; border-radius: 4px; color: #fff; background: #4b5361; cursor: pointer; font: 700 17px/25px system-ui, sans-serif; }
+.tm-watch-window-actions button:hover { background: #697386; }
+.tm-watch-body { display: grid; gap: 8px; padding: 0 8px 8px; }
+.tm-watch-section-title { font-weight: 800; opacity: .8; }
+.tm-watch-milestones, .tm-watch-awards { display: grid; gap: 8px; }
+.tm-watch-awards-toggle { width: 100%; padding: 5px 8px; border: 0; border-radius: 5px; color: #f6f7f9; background: #3c4451; cursor: pointer; text-align: left; font-weight: 700; }
+.tm-watch-awards-toggle:hover { background: #505b6b; }
+.tm-watch-player { display: grid; gap: 5px; }
+.tm-watch-player-name { padding-left: 6px; border-left: 4px solid #888; font-weight: 700; }
+.tm-watch-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.tm-watch-item { min-width: 0; padding: 5px 3px; border-radius: 5px; background: #343944; text-align: center; }
+.tm-watch-item span, .tm-watch-item strong { display: block; overflow: hidden; text-overflow: ellipsis; }
+.tm-watch-item strong { margin-top: 2px; white-space: nowrap; font-size: 10px; }
+.tm-watch-item strong .tm-watch-number { display: inline; text-shadow: 0 0 2px #000, 0 0 3px #000; }
+.tm-watch-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 5px; font-weight: 700; text-shadow: 0 0 2px #000, 0 0 3px #000; }
+.tm-watch-milestone-near { color: #1f1600; background: #fbbf24; }
+.tm-watch-milestone-qualified { color: white; background: #dc6b16; }
+.tm-watch-milestone-claimable { color: white; background: #dc2626; }
+.tm-watch-milestone-unavailable, .tm-watch-award-unavailable { opacity: .42; }
+.tm-watch-award-first { color: white; background: #b91c1c; }
+.tm-watch-award-second { color: #241700; background: #f59e0b; }
+
+@keyframes tm-watch-alert {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.035); box-shadow: 0 0 0 5px rgba(239, 68, 68, .3); }
+}
+
+.tm-watch-pulse { animation: tm-watch-alert .9s ease-in-out 2; }
+.tm-watch-collapsed { min-height: 0 !important; height: auto !important; resize: none !important; overflow: hidden !important; }
+.tm-watch-collapsed .tm-watch-body { display: none; }
+
+@media (max-width: 700px) {
+  #tm-milestone-watch { top: 58px; right: 6px; width: calc(100vw - 12px); }
+}

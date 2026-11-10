@@ -1,0 +1,5 @@
+:root { color-scheme: light dark; font: 14px/1.35 system-ui, sans-serif; }
+body { box-sizing: border-box; width: 285px; margin: 0; padding: 14px; background: Canvas; color: CanvasText; }
+label { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 12px; }
+p { margin: 12px 0 0; opacity: .7; font-size: 12px; }
+button { width: 100%; margin-top: 12px; padding: 7px; cursor: pointer; }
