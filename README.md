@@ -1,10 +1,11 @@
-# Terraforming Mars Milestone Watch (v1.5.0)
+# Terraforming Mars Milestone Watch (v1.6.0)
 
 Separate Brave/Chromium extension for Terraforming Mars games and tutorials on
 Board Game Arena. It does not modify the BGA Replay Viewer Settings extension.
 
 - Milestones show your progress / each opponent's progress / target, with player colors.
 - Awards are always visible and show each player's actual award counter in their player color; projected VP appears in the tooltip.
+- Award counters come from BGA's progress summary and can lag until BGA updates it. Benefactor uses the live terraform-rating tracker when available.
 - Milestones turn orange when an opponent is one away and red when they qualify; unavailable milestones are dimmed.
 - Identifies the current player from BGA's player ID rather than a fixed name.
 - Forces BGA's actual two-column log layout even when its selector incorrectly

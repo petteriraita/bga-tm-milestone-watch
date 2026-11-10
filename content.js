@@ -8,6 +8,7 @@
   const LAYOUT_KEY = 'tmMilestoneWatchLayout';
   const CHECK_INTERVAL_MS = 1000;
   let lastThreatSignature = '';
+  let lastRenderedData = '';
   let watchEnabled = null;
 
   function isTerraformingMars() {
@@ -76,13 +77,13 @@
 
     const milestoneRows = opponents.map(([id, player]) => {
       const info = findOperationInfo(progress[id], 'claim');
-      if (!info) return null;
+      const playerInfo = info || {};
       return {
         id,
         name: player.name || `Player ${id}`,
         color: player.color || '888888',
         milestones: milestones.map((milestone) => {
-          const entry = info[milestone.id] || {};
+          const entry = playerInfo[milestone.id] || {};
           const count = entry.c == null ? null : Number(entry.c);
           const error = Number(entry.q || 0);
           const unavailable = !!entry.claimed || error === 7 || error === 10;
@@ -110,14 +111,19 @@
 
     const awardRows = opponents.map(([id, player]) => {
       const info = findOperationInfo(progress[id], 'fund');
-      if (!info) return null;
+      const playerInfo = info || {};
       return {
         id,
         name: player.name || `Player ${id}`,
         color: player.color || '888888',
         awards: awards.map((award) => {
-          const entry = info[award.id] || {};
-          const counter = entry.counter == null ? null : Number(entry.counter);
+          const entry = playerInfo[award.id] || {};
+          // Benefactor is current TR. Read the live tracker when available:
+          // BGA's per-player progress cache may lag behind a TR change.
+          const tracker = award.name.toLowerCase() === 'benefactor' ? document.getElementById(`tracker_tr_${player.color}`) : null;
+          const liveTR = tracker?.dataset.state;
+          const rawCounter = liveTR != null && liveTR.trim() !== '' && Number.isFinite(Number(liveTR)) ? liveTR : entry.counter;
+          const counter = rawCounter == null || !Number.isFinite(Number(rawCounter)) ? null : Number(rawCounter);
           const vp = entry.vp == null ? null : Number(entry.vp);
           const place = Number(entry.place || 0);
           const unavailable = Number(entry.q || 0) === 10;
@@ -284,6 +290,9 @@
 
   function renderData(data) {
     const panel = createPanel();
+    const fingerprint = JSON.stringify(data);
+    if (fingerprint === lastRenderedData) return;
+    lastRenderedData = fingerprint;
     const milestonesContainer = panel.querySelector('.tm-watch-milestones');
     const awardsContainer = panel.querySelector('.tm-watch-awards');
     const threats = [];
