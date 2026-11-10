@@ -117,12 +117,12 @@
         color: player.color || '888888',
         awards: awards.map((award) => {
           const entry = info[award.id] || {};
-          const counter = Number(entry.counter || 0);
+          const counter = entry.counter == null ? null : Number(entry.counter);
           const vp = entry.vp == null ? null : Number(entry.vp);
           const place = Number(entry.place || 0);
           const unavailable = Number(entry.q || 0) === 10;
           const level = unavailable ? 'unavailable' : vp >= 5 ? 'first' : vp >= 2 ? 'second' : 'far';
-          const label = vp === null ? '?' : String(vp);
+          const label = counter === null ? '?' : `${counter} (${vp ?? '?'} projected VP)`;
           return { ...award, counter, vp, place, level, label };
         })
       };
@@ -147,8 +147,8 @@
       <div class="tm-watch-body">
         <div class="tm-watch-section-title">Milestones</div>
         <div class="tm-watch-milestones"></div>
-        <button class="tm-watch-awards-toggle" type="button">Show awards ▸</button>
-        <div class="tm-watch-awards" hidden></div>
+        <div class="tm-watch-section-title">Awards (score)</div>
+        <div class="tm-watch-awards"></div>
       </div>`;
     document.body.appendChild(panel);
     setupWindowControls(panel);
@@ -167,8 +167,7 @@
       top: Math.round(rect.top),
       width: Math.round(rect.width),
       height: panel.classList.contains('tm-watch-collapsed') ? null : Math.round(rect.height),
-      collapsed: panel.classList.contains('tm-watch-collapsed'),
-      awardsExpanded: !panel.querySelector('.tm-watch-awards')?.hidden
+      collapsed: panel.classList.contains('tm-watch-collapsed')
     };
     try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch {}
   }
@@ -186,10 +185,6 @@
     }
     panel.classList.toggle('tm-watch-collapsed', !!layout.collapsed);
     panel.querySelector('.tm-watch-collapse').textContent = layout.collapsed ? '+' : '−';
-    const awards = panel.querySelector('.tm-watch-awards');
-    const awardsToggle = panel.querySelector('.tm-watch-awards-toggle');
-    awards.hidden = !layout.awardsExpanded;
-    awardsToggle.textContent = layout.awardsExpanded ? 'Hide awards ▾' : 'Show awards ▸';
   }
 
   function setupWindowControls(panel) {
@@ -197,8 +192,6 @@
     const header = panel.querySelector('.tm-watch-header');
     const collapse = panel.querySelector('.tm-watch-collapse');
     const close = panel.querySelector('.tm-watch-close');
-    const awards = panel.querySelector('.tm-watch-awards');
-    const awardsToggle = panel.querySelector('.tm-watch-awards-toggle');
     let drag = null;
 
     header.addEventListener('pointerdown', (event) => {
@@ -237,11 +230,6 @@
       panel.hidden = true;
       document.dispatchEvent(new CustomEvent('tm-watch-set-enabled', { detail: { enabled: false } }));
     });
-    awardsToggle.addEventListener('click', () => {
-      awards.hidden = !awards.hidden;
-      awardsToggle.textContent = awards.hidden ? 'Show awards ▸' : 'Hide awards ▾';
-      saveLayout(panel);
-    });
 
     let resizeTimer;
     new ResizeObserver(() => {
@@ -250,7 +238,7 @@
     }).observe(panel);
   }
 
-  function createComparison(rows, itemKind) {
+  function createComparison(rows, itemKind, ownId) {
     const player = document.createElement('div');
     const legend = document.createElement('div');
     legend.className = 'tm-watch-legend';
@@ -267,6 +255,12 @@
     for (const entry of rows[0]?.[key] || []) {
       const item = document.createElement('div');
       item.className = 'tm-watch-item';
+      if (itemKind === 'milestone') {
+        const levels = rows.filter(row => row.id !== ownId).map(row => row.milestones.find(value => value.id === entry.id)?.level);
+        if (levels.includes('claimable') || levels.includes('qualified')) item.classList.add('tm-watch-milestone-claimable');
+        else if (levels.includes('near')) item.classList.add('tm-watch-milestone-near');
+        else if (levels.length && levels.every(level => level === 'unavailable')) item.classList.add('tm-watch-milestone-unavailable');
+      }
       const itemName = document.createElement('span');
       itemName.textContent = entry.name;
       const itemValue = document.createElement('strong');
@@ -275,7 +269,7 @@
         if (index) itemValue.append(' / ');
         const number = document.createElement('span');
         number.className = 'tm-watch-number';
-        number.textContent = itemKind === 'milestone' ? (value?.count ?? '?') : (value?.vp ?? '?');
+        number.textContent = itemKind === 'milestone' ? (value?.count ?? '?') : (value?.counter ?? '?');
         number.style.color = `#${/^[a-f0-9]{6}$/i.test(row.color) ? row.color : 'ffffff'}`;
         number.title = `${row.name}: ${value?.label ?? 'unavailable'}`;
         itemValue.appendChild(number);
@@ -302,7 +296,7 @@
       return;
     }
 
-    milestonesContainer.appendChild(createComparison(data.milestoneRows, 'milestone'));
+    milestonesContainer.appendChild(createComparison(data.milestoneRows, 'milestone', data.ownId));
     for (const row of data.milestoneRows) {
       if (row.id === data.ownId) continue;
       for (const milestone of row.milestones) {
@@ -311,7 +305,7 @@
         }
       }
     }
-    if (data.awardRows.length) awardsContainer.appendChild(createComparison(data.awardRows, 'award'));
+    if (data.awardRows.length) awardsContainer.appendChild(createComparison(data.awardRows, 'award', data.ownId));
     else awardsContainer.textContent = 'Award progress not available yet.';
 
     panel.dataset.level = threats.some((x) => x.endsWith(':claimable')) ? 'claimable' :
