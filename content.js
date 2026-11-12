@@ -59,9 +59,25 @@
       .map(([id, token]) => ({
         id,
         name: token.name || document.getElementById(id)?.dataset.name || id,
+        rule: token.r,
         number: Number(token.num || id.split('_').pop())
       }))
       .sort((a, b) => a.number - b.number);
+  }
+
+  function liveAwardCounter(rule, color) {
+    if (typeof rule !== 'string' || !/^[a-zA-Z][a-zA-Z0-9]*(\+[a-zA-Z][a-zA-Z0-9]*)*$/.test(rule)) return null;
+    // Restrict direct calculation to raw resources, production and TR.
+    // Tag and board rules may include wild tags or other game-specific logic.
+    const safeTrackers = new Set(['tr', 'm', 's', 'u', 'p', 'e', 'h', 'pm', 'ps', 'pu', 'pp', 'pe', 'ph']);
+    let total = 0;
+    for (const term of rule.split('+')) {
+      if (!safeTrackers.has(term)) return null;
+      const raw = document.getElementById(`tracker_${term}_${color}`)?.dataset.state;
+      if (raw == null || raw.trim() === '' || !Number.isFinite(Number(raw))) return null;
+      total += Number(raw);
+    }
+    return total;
   }
 
   function getWatchData() {
@@ -118,17 +134,17 @@
         color: player.color || '888888',
         awards: awards.map((award) => {
           const entry = playerInfo[award.id] || {};
-          // Benefactor is current TR. Read the live tracker when available:
-          // BGA's per-player progress cache may lag behind a TR change.
-          const tracker = award.name.toLowerCase() === 'benefactor' ? document.getElementById(`tracker_tr_${player.color}`) : null;
-          const liveTR = tracker?.dataset.state;
-          const rawCounter = liveTR != null && liveTR.trim() !== '' && Number.isFinite(Number(liveTR)) ? liveTR : entry.counter;
+          // For BGA's simple tracker rules, read every live tracker rather than
+          // a potentially stale per-player summary. Complex board/card rules
+          // use the same counter as BGA's own Awards Summary.
+          const liveCounter = liveAwardCounter(award.rule, player.color);
+          const rawCounter = liveCounter ?? entry.counter;
           const counter = rawCounter == null || !Number.isFinite(Number(rawCounter)) ? null : Number(rawCounter);
           const vp = entry.vp == null ? null : Number(entry.vp);
           const place = Number(entry.place || 0);
           const unavailable = Number(entry.q || 0) === 10;
           const level = unavailable ? 'unavailable' : vp >= 5 ? 'first' : vp >= 2 ? 'second' : 'far';
-          const label = counter === null ? '?' : `${counter} (${vp ?? '?'} projected VP)`;
+          const label = counter === null ? '?' : `${counter} (${liveCounter === null ? 'BGA summary; may be stale' : 'live tracker'}; ${vp ?? '?'} projected VP from BGA summary)`;
           return { ...award, counter, vp, place, level, label };
         })
       };
